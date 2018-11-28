@@ -6,8 +6,29 @@ import struct
 #1D Array of wavelength reference for each reading
 wavelengths = np.loadtxt(fname = "wavelengths.csv")
 
+intensities = np.loadtxt(fname = "intensities.csv")
+
+
+
+
+i = 0
+mixed = []
+mixed_phaseShift = []
+while (i < len(intensities)):
+    j = 1
+    timeStamp = intensities[i][0]
+    ref_value = rf.refValue(timeStamp)
+    rev_value_phaseShift = rf.refValue_phaseShift(timeStamp)
+    mixed.append([timeStamp])
+    mixed_phaseShift.append([timeStamp])
+    while (j < len(intensities[i])):
+        mixed[i].append(ref_value * intensities[i][j])
+        mixed_phaseShift[i].append(ref_value_phaseShift * intensities[i][j])
+        j += 1
+    i += 1
+
 #Deletes last line of file
-def deleteEndLine (file):
+"""def deleteEndLine (file):
     file = open(file, "rb+")
 
 
@@ -48,31 +69,17 @@ def readEndLine (file):
 
 
     f.close()
-    return last
+    return last"""
 
 
 
 #loop that multiplies intensity data with the corresponding reference signal value (mixes signal)
-i = 0
+"""i = 0
 while i < 1:
     line = readEndLine("intensities.csv")
     print(line)
-    i += 1
+    i += 1"""
 
 
 
-#i = 0
-#mixed = []
-#mixed_phaseShift = []
-#while (i < len(intensities)):
-    #j = 1
-    #timeStamp = intensities[i][0]
-    #ref_value = rf.refValue(timeStamp)
-    #rev_value_phaseShift = rf.refValue_phaseShift(timeStamp)
-    #mixed.append([timeStamp])
-    #mixed_phaseShift.append([timeStamp])
-    #while (j < len(intensities[i])):
-        #mixed[i].append(ref_value * intensities[i][j])
-        #mixed_phaseShift[i].append(ref_value_phaseShift * intensities[i][j])
-        #j += 1
-    #i += 1
+
