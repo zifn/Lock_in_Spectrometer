@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 
 #1D Array of wavelength reference for each reading
 wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
-print(wavelengths)
 
 #2D Array of timestamp and intensities for each wavelength
 intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
@@ -80,19 +79,6 @@ while (i < len(mixed_phaseShift[0])):
     filteredColumn = butter_lowpass_filter(data, cutoff, fs, order)
     filtered_phaseShift[:, i] = filteredColumn
     i += 1
-
-x = filtered[:,0]
-y = filtered[:, 1]
-
-
-plt.plot(mixed[:,0], mixed[:,1], 'b-', label='data')
-plt.plot(x, y, 'g-', linewidth=2, label='filtered data')
-plt.xlabel('Time [msec]')
-plt.grid()
-plt.legend()
-
-plt.subplots_adjust(hspace=0.35)
-plt.show()
 
 
 
