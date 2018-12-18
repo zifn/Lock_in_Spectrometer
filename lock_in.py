@@ -4,6 +4,7 @@ import reference_signal as rf
 import struct
 from scipy.signal import butter, lfilter, freqz
 import matplotlib.pyplot as plt
+import random
 
 
 #1D Array of wavelength reference for each reading
@@ -13,10 +14,10 @@ wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
 intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
 
 #Cutoff frequency for low pass filter (Hz)
-cutoff = 5
+cutoff = .1
 
 #Order of the butterworth low pass filter
-order = 5
+order = 100
 
 
 i = 0
@@ -82,3 +83,22 @@ while (i < len(mixed_phaseShift[0])):
 
 
 
+# Demonstrate the use of the filter.
+# First make some data to be filtered.
+T = 5.0         # seconds
+n = int(T * fs) # total number of samples
+t = np.linspace(0, T, n, endpoint=False)
+# "Noisy" data.  We want to recover the 1.2 Hz signal from this.
+data = [ 10 for _ in t]
+mixed_data = [3 * random.random() +data[int(tme/n)] * rf.refValue(tme) for tme in t]
+
+y = butter_lowpass_filter(data, cutoff, fs, order)
+
+plt.plot(t, data, 'b-', label='data')
+plt.plot(t, y, 'g-', linewidth=2, label='filtered data')
+plt.xlabel('Time [sec]')
+plt.grid()
+plt.legend()
+
+plt.subplots_adjust(hspace=0.35)
+plt.show()

@@ -1,7 +1,7 @@
 #Returns the value of the reference singal at a given time value
 import numpy as np
 frequency = 1
-amplitude = 1
+amplitude = .01
 def refValue (t):
     return amplitude * np.sin(frequency * t)
 
