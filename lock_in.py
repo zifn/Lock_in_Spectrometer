@@ -1,10 +1,8 @@
 import numpy as np
 import os
 import reference_signal as rf
-import struct
-from scipy.signal import butter, lfilter, freqz
-import matplotlib.pyplot as plt
-import random
+from scipy.fftpack import fft, ifft
+import os
 
 
 #1D Array of wavelength reference for each reading
@@ -16,10 +14,10 @@ intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
 #Cutoff frequency for low pass filter (Hz)
 cutoff = .1
 
-#Order of the butterworth low pass filter
-order = 100
+#Format of lock_in output values (R, theta) vs (x, y)
+polar = False
 
-
+#Mixes signal with the reference signal
 i = 0
 mixed = []
 mixed_phaseShift = []
@@ -40,16 +38,18 @@ mixed = np.asarray(mixed)
 mixed_phaseShift = np.asarray(mixed_phaseShift)
 
 
-def butter_lowpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='low', analog=False)
-    return b, a
+#Lowpass filter using the fft algorithm
+def fft_lowpass(data, cutoff, fs):
+    n = len(data)
+    fourier = fft(data)
+    freq_index = int(cutoff * n / np.pi)
+    i = freq_index
+    while(i < len(fourier)):
+        fourier[i] = 0
+        i += 1
+    return ifft(fourier)
 
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
+
 
 #returns 0th column of mixed (timestamps in milliseconds)
 time = mixed[:,0]
@@ -61,44 +61,93 @@ timePerSample = totalTime/timeSteps
 #Setting sample rate to fs in Hertz - approximates a constant sample rate
 fs = 1000/timePerSample
 
-#Applies low-pass filter to each column of mixed
-i = 1
-filtered = np.ndarray(shape = (timeSteps, len(mixed[0])))
-filtered[:,0] = time
-while (i < len(mixed[0])):
+#Applies low-pass filter and averages output for each column of mixed
+i = 0
+#Number of wavelengths.
+n = len(mixed[0])
+filtered = []
+while (i < n):
     data = mixed[:,i]
-    filteredColumn = butter_lowpass_filter(data, cutoff, fs, order)
-    filtered[:, i] = filteredColumn
+    filteredColumn = fft_lowpass(data, cutoff, fs)
+    value = np.mean(filteredColumn)
+    filtered.append(value)
     i += 1
 
-#Applies low-pass filter to each column of mixed_phaseShift
-i = 1
-filtered_phaseShift = np.ndarray(shape = (timeSteps, len(mixed[0])))
-filtered_phaseShift[:,0] = time
-while (i < len(mixed_phaseShift[0])):
+#Applies low-pass filter and averages output for each column of mixed_phaseShift
+i = 0
+filtered_phaseShift = []
+while (i < n):
     data = mixed_phaseShift[:,i]
-    filteredColumn = butter_lowpass_filter(data, cutoff, fs, order)
-    filtered_phaseShift[:, i] = filteredColumn
+    filteredColumn = fft_lowpass(data, cutoff, fs)
+    value = np.mean(filteredColumn)
+    filtered_phaseShift.append(value)
     i += 1
 
+#Prints output to csv "lock_in_values_x.csv" and "lock_in_values_y.csv" as [last timeStamp], x0, x1... \n 
+#The header is the wavelengths 
+#takes in a list of lock in values, the phase shift values and their respective wavelengths
+def cartesianOutput(values, values_phaseShift, wavelengths, time):
+    timeIndex = time[-1]
+    file1 = open("lock_in_values_x, a+")
+    file2 = open("lock_in_values_y", "a+")
+    if (os.stat("file1").st_size == 0):
+        for wavelength in wavelengths:
+            file1.write("," + str(wavelength))
+            file2.write("," + str(wavelength))
+        file1.write("\n")
+        file2.write("\n")
+    file1.write(str(timeIndex) + ",")
+    file2.write(str(timeIndex) + ",")
+    n = len(values)
+    i = 0
+    while (i < n):
+        file1.write(str(values[i]))
+        file2.write(str(values_phaseShift[i]))
+        i += 1
+        if (i < n):
+            file1.write(",")
+            file2.write(",")
 
+    file1.write("\n")
+    file2.write("\n")
+    file1.close()
+    file2.close()
 
-# Demonstrate the use of the filter.
-# First make some data to be filtered.
-T = 5.0         # seconds
-n = int(T * fs) # total number of samples
-t = np.linspace(0, T, n, endpoint=False)
-# "Noisy" data.  We want to recover the 1.2 Hz signal from this.
-data = [ 10 for _ in t]
-mixed_data = [3 * random.random() +data[int(tme/n)] * rf.refValue(tme) for tme in t]
+#Prints output to csv "lock_in_values_r.csv" and "lock_in_values_theta.csv" as [last timeStamp], R0, R1... \n 
+#The header is the wavelengths 
+#takes in a list of lock in values, the phase shift values and their respective wavelengths
+def polarOutput(values, values_phaseShift, wavelengths, time):
+    timeIndex = time[-1]
+    file1 = open("lock_in_values_r, a+")
+    file2 = open("lock_in_values_theta", "a+")
+    if (os.stat("file1").st_size == 0):
+        for wavelength in wavelengths:
+            file1.write("," + str(wavelength))
+            file2.write("," + str(wavelength))
+        file1.write("\n")
+        file2.write("\n")
+    file1.write(str(timeIndex) + ",")
+    file2.write(str(timeIndex) + ",")
+    n = len(values)
+    i = 0
+    while (i < n):
+        x = values[i]
+        y = values_phaseShift[i]
+        r = np.sqrt(x**2 + y**2)
+        theta = np.arctan2(y, x)
+        file1.write(str(r))
+        file2.write(str(theta))
+        i += 1
+        if (i < n):
+            file1.write(",")
+            file2.write(",")
 
-y = butter_lowpass_filter(data, cutoff, fs, order)
+    file1.write("\n")
+    file2.write("\n")
+    file1.close()
+    file2.close()
 
-plt.plot(t, data, 'b-', label='data')
-plt.plot(t, y, 'g-', linewidth=2, label='filtered data')
-plt.xlabel('Time [sec]')
-plt.grid()
-plt.legend()
-
-plt.subplots_adjust(hspace=0.35)
-plt.show()
+if (polar):
+    polarOutput(filtered, filtered_phaseShift, wavelengths, time)
+else:
+    cartesianOutput(filtered, filtered_phaseShift, wavelengths, time)
