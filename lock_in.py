@@ -17,6 +17,8 @@ cutoff = .1
 #Format of lock_in output values (R, theta) vs (x, y)
 polar = False
 
+rf.setUp(intensities[0][0x])
+
 #Mixes signal with the reference signal
 i = 0
 mixed = []
@@ -83,7 +85,8 @@ while (i < n):
     filtered_phaseShift.append(value)
     i += 1
 
-#Prints output to csv "lock_in_values_x.csv" and "lock_in_values_y.csv" as [last timeStamp], x0, x1... \n 
+#Prints output to csv "lock_in_values_x.csv" and "lock_in_values_y.csv" as [last timeStamp], x0, x1... \n
+#and the same for y
 #The header is the wavelengths 
 #takes in a list of lock in values, the phase shift values and their respective wavelengths
 def cartesianOutput(values, values_phaseShift, wavelengths, time):
@@ -114,6 +117,7 @@ def cartesianOutput(values, values_phaseShift, wavelengths, time):
     file2.close()
 
 #Prints output to csv "lock_in_values_r.csv" and "lock_in_values_theta.csv" as [last timeStamp], R0, R1... \n 
+#and the same for theta
 #The header is the wavelengths 
 #takes in a list of lock in values, the phase shift values and their respective wavelengths
 def polarOutput(values, values_phaseShift, wavelengths, time):
