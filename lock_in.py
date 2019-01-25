@@ -17,7 +17,7 @@ cutoff = .1
 #Format of lock_in output values (R, theta) vs (x, y)
 polar = False
 
-rf.setUp(intensities[0][0x])
+rf.setUp(intensities[0][0])
 
 #Mixes signal with the reference signal
 i = 0
