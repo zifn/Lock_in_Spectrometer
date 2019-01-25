@@ -17,7 +17,15 @@ cutoff = .1
 #Format of lock_in output values (R, theta) vs (x, y)
 polar = False
 
-rf.setUp(intensities[0][0])
+est_freq, est_phase, est_offset = rf.setUp(intensities[0][0])
+
+def refValue (t):
+    return np.sin(est_freq*t+est_phase)
+
+
+#Returns value of the reference signal phase shifted by pi/2 rad
+def refValue_phaseShift (t):
+    return np.cos(est_freq*t+est_phase)
 
 #Mixes signal with the reference signal
 i = 0
@@ -26,8 +34,8 @@ mixed_phaseShift = []
 while (i < len(intensities)):
     j = 1
     timeStamp = intensities[i][0]
-    ref_value = rf.refValue(timeStamp)
-    ref_value_phaseShift = rf.refValue_phaseShift(timeStamp)
+    ref_value = refValue(timeStamp)
+    ref_value_phaseShift = refValue_phaseShift(timeStamp)
     mixed.append([timeStamp])
     mixed_phaseShift.append([timeStamp])
     while (j < len(intensities[i])):
