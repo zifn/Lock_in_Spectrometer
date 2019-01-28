@@ -1,4 +1,6 @@
-#Returns the value of the reference singal at a given time value
+#Sets up functions to return the value of the reference singal at a given time value
+#Commented sections are for testing
+
 import numpy as np
 from scipy.optimize import leastsq
 import pylab as plt
@@ -8,7 +10,7 @@ import pylab as plt
 def setUp(startTime):
     rawInput = [ ]
     samplingRate = 1 #Sampling rate of the reference date in Hz
-    
+
     """i = 0
     cutoff_update = 0
     cutoff = 10 + int(np.random.normal(scale = 2, loc = 0))
