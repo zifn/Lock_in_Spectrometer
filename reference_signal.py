@@ -8,8 +8,9 @@ import pylab as plt
 
 
 def setUp(startTime):
-    rawInput = [ ]
-    samplingRate = 1 #Sampling rate of the reference date in Hz
+    rawInput = np.genfromtxt(fname = "RefData.csv", delimiter = ",")
+    samplingRate = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
+    samplingRate = samplingRate[0] #Sampling rate of the reference data in Hz
 
     """i = 0
     cutoff_update = 0

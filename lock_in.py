@@ -17,15 +17,15 @@ cutoff = .1
 #Format of lock_in output values (R, theta) vs (x, y)
 polar = False
 
-est_freq, est_phase, est_offset = rf.setUp(intensities[0][0])
+est_freq, est_phase, est_offset, est_amp = rf.setUp(intensities[0][0])
 
 def refValue (t):
-    return np.sin(est_freq*t+est_phase)
+    return est_amp * np.sin(est_freq*t+est_phase)
 
 
 #Returns value of the reference signal phase shifted by pi/2 rad
 def refValue_phaseShift (t):
-    return np.cos(est_freq*t+est_phase)
+    return est_amp * np.cos(est_freq*t+est_phase)
 
 #Mixes signal with the reference signal
 i = 0
@@ -80,7 +80,7 @@ while (i < n):
     data = mixed[:,i]
     filteredColumn = fft_lowpass(data, cutoff, fs)
     value = np.mean(filteredColumn)
-    filtered.append(value)
+    filtered.append(np.real(value))
     i += 1
 
 #Applies low-pass filter and averages output for each column of mixed_phaseShift
@@ -90,7 +90,7 @@ while (i < n):
     data = mixed_phaseShift[:,i]
     filteredColumn = fft_lowpass(data, cutoff, fs)
     value = np.mean(filteredColumn)
-    filtered_phaseShift.append(value)
+    filtered_phaseShift.append(np.real(value))
     i += 1
 
 #Prints output to csv "lock_in_values_x.csv" and "lock_in_values_y.csv" as [last timeStamp], x0, x1... \n
@@ -99,9 +99,10 @@ while (i < n):
 #takes in a list of lock in values, the phase shift values and their respective wavelengths
 def cartesianOutput(values, values_phaseShift, wavelengths, time):
     timeIndex = time[-1]
-    file1 = open("lock_in_values_x, a+")
-    file2 = open("lock_in_values_y", "a+")
-    if (os.stat("file1").st_size == 0):
+    file1 = open("lock_in_values_x.csv", "a+")
+    file2 = open("lock_in_values_y.csv", "a+")
+    
+    if (os.stat("lock_in_values_x.csv").st_size == 0):
         for wavelength in wavelengths:
             file1.write("," + str(wavelength))
             file2.write("," + str(wavelength))
@@ -130,9 +131,9 @@ def cartesianOutput(values, values_phaseShift, wavelengths, time):
 #takes in a list of lock in values, the phase shift values and their respective wavelengths
 def polarOutput(values, values_phaseShift, wavelengths, time):
     timeIndex = time[-1]
-    file1 = open("lock_in_values_r, a+")
-    file2 = open("lock_in_values_theta", "a+")
-    if (os.stat("file1").st_size == 0):
+    file1 = open("lock_in_values_r.csv", "a+")
+    file2 = open("lock_in_values_theta.csv", "a+")
+    if (os.stat("lock_in_values_r.csv").st_size == 0):
         for wavelength in wavelengths:
             file1.write("," + str(wavelength))
             file2.write("," + str(wavelength))
