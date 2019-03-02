@@ -4,13 +4,10 @@
 import numpy as np
 from scipy.optimize import leastsq
 
-
-
 def setUp(startTime):
     rawInput = np.genfromtxt(fname = "RefData.csv", delimiter = ",")
     samplingRate = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
     samplingRate = samplingRate[0] #Sampling rate of the reference data in Hz
-
     #Number of data points
     N = len(rawInput)
     #Array of time values for sample
@@ -55,6 +52,3 @@ def setUp(startTime):
     optimize_func = lambda x: x[3] * np.sin(x[0]*time * 2 * np.pi+x[1]) + x[2] - rawInput
     est_freq, est_phase, est_offset, est_amp = leastsq(optimize_func, [guess_freq, guess_phase, guess_offset, guess_amp])[0]
     return est_freq, est_phase, est_offset, est_amp
-
-
-   
