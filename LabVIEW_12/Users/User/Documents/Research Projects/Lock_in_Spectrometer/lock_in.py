@@ -11,7 +11,7 @@ wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
 intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
 
 #Cutoff frequency for low pass filter (Hz)
-cutoff = .1
+cutoff = .0023
 
 #Format of lock_in output values (R, theta) vs (x, y)
 polar = True
@@ -163,3 +163,11 @@ if (polar):
     polarOutput(filtered, filtered_phaseShift, wavelengths, time)
 else:
     cartesianOutput(filtered, filtered_phaseShift, wavelengths, time)
+
+def main():
+    """
+    Discription Here
+    """
+
+if __name__ == "__main__":
+    main()

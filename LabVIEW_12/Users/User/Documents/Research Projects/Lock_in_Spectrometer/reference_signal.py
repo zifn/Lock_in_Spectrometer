@@ -6,8 +6,7 @@ from scipy.optimize import leastsq
 
 def setUp(startTime):
     rawInput = np.genfromtxt(fname = "RefData.csv", delimiter = ",")
-    samplingRate = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
-    samplingRate = samplingRate[0] #Sampling rate of the reference data in Hz
+    samplingRate = np.genfromtxt(fname = "RefFreq.csv", delimiter = ",") #Sampling rate of the reference data in Hz
     #Number of data points
     N = len(rawInput)
     #Array of time values for sample
