@@ -2,6 +2,7 @@ import numpy as np
 import os
 import reference_signal as rf
 from scipy.fftpack import fft, ifft
+import sys
 
 
 #1D Array of wavelength reference for each reading
@@ -10,13 +11,18 @@ wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
 #2D Array of timestamp and intensities for each wavelength
 intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
 
-#Cutoff frequency for low pass filter (Hz)
-cutoff = .0023
+arguments = sys.argv
 
 #Format of lock_in output values (R, theta) vs (x, y)
-polar = True
+polar = arguments[1]
 
-est_freq, est_phase, est_offset, est_amp = rf.setUp(intensities[0][0])
+#Cutoff frequency for low pass filter (Hz)
+cutoff = float(arguments[2])
+
+#Sampling rate of the reference signal DaQ
+refFreq = float(arguments[3])
+
+est_freq, est_phase, est_offset, est_amp = rf.setUp(intensities[0][0], refFreq)
 
 def refValue (t):
     return est_amp * np.sin(est_freq*t+est_phase)
@@ -159,7 +165,7 @@ def polarOutput(values, values_phaseShift, wavelengths, time):
     file1.close()
     file2.close()
 
-if (polar):
+if (polar == "T"):
     polarOutput(filtered, filtered_phaseShift, wavelengths, time)
 else:
     cartesianOutput(filtered, filtered_phaseShift, wavelengths, time)

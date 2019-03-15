@@ -4,9 +4,9 @@
 import numpy as np
 from scipy.optimize import leastsq
 
-def setUp(startTime):
+def setUp(startTime, refFreq):
     rawInput = np.genfromtxt(fname = "RefData.csv", delimiter = ",")
-    samplingRate = np.genfromtxt(fname = "RefFreq.csv", delimiter = ",") #Sampling rate of the reference data in Hz
+    samplingRate = refFreq #Sampling rate of the reference data in Hz
     #Number of data points
     N = len(rawInput)
     #Array of time values for sample
