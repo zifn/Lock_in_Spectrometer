@@ -49,24 +49,28 @@ mixed_phaseShift = np.asarray(mixed_phaseShift)
 #graphs fft of every 100th column of intensities
 i = 1
 time = intensities[:, 0]
-sampling_space = ((intensities[-1,0]-intensities[0,0])/(len(intensities))*1000)
-frequencies = np.fft.fftfreq(len(time), d = sampling_space)
-while (i < len(intensities)):
+time = [timestamp/1000 for timestamp in time]
+f_s = (len(time))/(time[-1]-time[0])
+frequencies = np.fft.fftfreq(len(time)) * f_s
+while (i < 1900):
     data = intensities[:,i]
-    transformedColumn = fft(data)/len(data)
+    transformedColumn = fft(data)
     plt.figure(i + 1)
     plt.plot(frequencies, transformedColumn)
     plt.title(str(wavelengths[i]) + "nm Intensity in Freq Space")
-    plt.xlabel("")
-    plt.figure(i + 2)
+    plt.xlabel("Frequency in Hz")
+    """plt.figure(i + 2)
     plt.plot(time, data)
     plt.title(str(wavelengths[i]) + "nm Intensity in Time space")
+    plt.xlabel("Time in Seconds")
     plt.figure(i+3)
     plt.plot(time, mixed[:, i])
     plt.title(str(wavelengths[i]) + "nm Mixed in Time Space")
+    """
     plt.figure(i+4)
     plt.plot(frequencies, fft(mixed[:, i]))
     plt.title(str(wavelengths[i]) + "nm Mixed in Freq Space")
-
-    i += 300
+    i += 100
+"""every incrememnt of i by 100 is equivalent to a ~20 nm increment in wavelength, 
+i = 1 is equivalent to the wavelength ~500 nm"""
 plt.show()

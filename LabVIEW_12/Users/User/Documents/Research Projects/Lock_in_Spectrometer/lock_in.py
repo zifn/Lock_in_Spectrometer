@@ -1,15 +1,11 @@
 import numpy as np
 import os
 import reference_signal as rf
-from scipy.fftpack import fft, ifft
+from numpy.fft import fft, ifft
 import sys
 
 
-#1D Array of wavelength reference for each reading
-wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
 
-#2D Array of timestamp and intensities for each wavelength
-intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
 
 arguments = sys.argv
 
@@ -21,6 +17,22 @@ cutoff = float(arguments[2])
 
 #Sampling rate of the reference signal DaQ
 refFreq = float(arguments[3])
+
+#Whether or not all the intensities data is being saved by iteration
+sample_all_data = arguments[4]
+
+#The iteration number of the outer loop in labview
+iteration = arguments[5]
+
+#1D Array of wavelength reference for each reading
+wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
+
+#2D Array of timestamp and intensities for each wavelength
+if sample_all_data == "T":
+    file_name = "intensities" + iteration + ".csv"
+    intensities = np.genfromtxt(fname = file_name, delimiter = ",")
+else:
+    intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
 
 est_freq, est_phase, est_offset, est_amp = rf.setUp(intensities[0][0], refFreq)
 
