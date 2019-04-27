@@ -1,0 +1,7 @@
+LP filter Cuttoff Freq: 1.5 Hz
+Start Wavelen: 500 nm
+End Wavelen: 850 nm
+time to run: 60 s
+time for inner loop: 10 s
+reference Sample Rate: 2000 Hz
+chopper Freq: 50 Hz

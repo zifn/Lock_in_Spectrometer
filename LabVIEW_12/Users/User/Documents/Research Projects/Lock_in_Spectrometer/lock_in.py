@@ -6,7 +6,6 @@ import sys
 
 
 
-
 arguments = sys.argv
 
 #Format of lock_in output values (R, theta) vs (x, y)
@@ -28,87 +27,50 @@ iteration = arguments[5]
 wavelengths = np.genfromtxt(fname = "wavelengths.csv", delimiter = ",")
 
 #2D Array of timestamp and intensities for each wavelength
-if sample_all_data == "T":
-    file_name = "intensities" + iteration + ".csv"
-    intensities = np.genfromtxt(fname = file_name, delimiter = ",")
-else:
-    intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
+try:
+    if sample_all_data == "T":
+        file_name = "intensities" + str(iteration) + ".csv"
+        intensities = np.genfromtxt(fname = file_name, delimiter = ",")
+    else:
+        intensities = np.genfromtxt(fname = "intensities.csv", delimiter = ",")
+except OSError as e:
+    raise e
 
-est_freq, est_phase, est_offset, est_amp = rf.setUp(intensities[0][0], refFreq)
 
-def refValue (t):
-    return est_amp * np.sin(est_freq*t+est_phase)
+
+def refValue (t, est_amp, est_freq, est_phase):
+    return est_amp*np.sin(est_freq*t*2*np.pi + est_phase)
 
 
 #Returns value of the reference signal phase shifted by pi/2 rad
-def refValue_phaseShift (t):
-    return est_amp * np.cos(est_freq*t+est_phase)
+def refValue_phaseShift (t, est_amp, est_freq, est_phase):
+    return est_amp*np.cos(est_freq*t*2*np.pi + est_phase)
 
-#Mixes signal with the reference signal
-i = 0
-mixed = []
-mixed_phaseShift = []
-while (i < len(intensities)):
-    j = 1
-    timeStamp = intensities[i][0]
-    ref_value = refValue(timeStamp)
-    ref_value_phaseShift = refValue_phaseShift(timeStamp)
-    mixed.append([timeStamp])
-    mixed_phaseShift.append([timeStamp])
-    while (j < len(intensities[i])):
-        mixed[i].append(ref_value * intensities[i][j])
-        mixed_phaseShift[i].append(ref_value_phaseShift * intensities[i][j])
-        j += 1
-    i += 1
 
-mixed = np.asarray(mixed)
-mixed_phaseShift = np.asarray(mixed_phaseShift)
 
 
 #Lowpass filter using the fft algorithm
-def fft_lowpass(data, cutoff, fs):
+def fft_lowpass(data, cutoff, f_s, time):
     n = len(data)
     fourier = fft(data)
-    freq_index = int(cutoff * n / np.pi)
-    i = freq_index
-    while(i < len(fourier)):
-        fourier[i] = 0
-        i += 1
+    frequencies = np.fft.fftfreq(len(time)) * f_s
+    index_upper = 0
+    index_lower = 0
+    for index, freq in enumerate(frequencies):
+        if freq > cutoff:
+            index_upper = index
+            break
+
+    for index, freq in enumerate(frequencies):
+        if freq > -1 * cutoff:
+            index_lower = index
+            break
+
+    for index, freq in enumerate(frequencies):
+        if index < index_lower or index > index_upper:
+            fourier[index] = 0
+
     return ifft(fourier)
-
-
-
-#returns 0th column of mixed (timestamps in milliseconds)
-time = mixed[:,0]
-
-timeSteps = len(time)
-totalTime = time[timeSteps - 1] - time[0]
-timePerSample = totalTime/timeSteps
-
-#Setting sample rate to fs in Hertz - approximates a constant sample rate
-fs = 1000/timePerSample
-
-#Applies low-pass filter and averages output for each column of mixed
-i = 1
-#Number of wavelengths.
-n = len(mixed[0])
-filtered = []
-while (i < n):
-    data = mixed[:,i]
-    filteredColumn = fft_lowpass(data, cutoff, fs)
-    value = np.mean(filteredColumn)
-    filtered.append(np.absolute(value))
-    i += 1
-
-#Applies low-pass filter and averages output for each column of mixed_phaseShift
-i = 1
-filtered_phaseShift = []
-while (i < n):
-    data = mixed_phaseShift[:,i]
-    filteredColumn = fft_lowpass(data, cutoff, fs)
-    value = np.mean(filteredColumn)
-    filtered_phaseShift.append(np.absolute(value))
-    i += 1
 
 #Prints output to csv "lock_in_values_x.csv" and "lock_in_values_y.csv" as [last timeStamp], x0, x1... \n
 #and the same for y
@@ -177,15 +139,70 @@ def polarOutput(values, values_phaseShift, wavelengths, time):
     file1.close()
     file2.close()
 
-if (polar == "T"):
-    polarOutput(filtered, filtered_phaseShift, wavelengths, time)
-else:
-    cartesianOutput(filtered, filtered_phaseShift, wavelengths, time)
+
 
 def main():
     """
     Discription Here
     """
+    est_freq, est_phase, est_offset, est_amp = rf.setUp(intensities[0][0], refFreq)
+
+    #Mixes signal with the reference signal
+    i = 0
+    mixed = []
+    mixed_phaseShift = []
+    while (i < len(intensities)):
+        j = 1
+        timeStamp = intensities[i][0]/1000
+        ref_value = refValue(timeStamp, est_amp, est_freq, est_phase)
+        ref_value_phaseShift = refValue_phaseShift(timeStamp, est_amp, est_freq, est_phase)
+        mixed.append([timeStamp])
+        mixed_phaseShift.append([timeStamp])
+        while (j < len(intensities[i])):
+            mixed[i].append(ref_value * intensities[i][j])
+            mixed_phaseShift[i].append(ref_value_phaseShift * intensities[i][j])
+            j += 1
+        i += 1
+
+    mixed = np.asarray(mixed)
+    mixed_phaseShift = np.asarray(mixed_phaseShift)
+
+    #returns 0th column of mixed (timestamps in milliseconds)
+    time = mixed[:,0]
+
+    timeSteps = len(time)
+    totalTime = time[timeSteps - 1] - time[0]
+    timePerSample = totalTime/timeSteps
+
+    #Setting sample rate to fs in Hertz - approximates a constant sample rate
+    fs = 1/timePerSample
+
+    #Applies low-pass filter and averages output for each column of mixed
+    i = 1
+    #Number of wavelengths.
+    n = len(mixed[0])
+    filtered = []
+    while (i < n):
+        data = mixed[:,i]
+        filteredColumn = fft_lowpass(data, cutoff, fs, time)
+        value = np.mean(filteredColumn)
+        filtered.append(np.absolute(value))
+        i += 1
+
+    #Applies low-pass filter and averages output for each column of mixed_phaseShift
+    i = 1
+    filtered_phaseShift = []
+    while (i < n):
+        data = mixed_phaseShift[:,i]
+        filteredColumn = fft_lowpass(data, cutoff, fs, time)
+        value = np.mean(filteredColumn)
+        filtered_phaseShift.append(np.absolute(value))
+        i += 1
+
+    if (polar == "T"):
+        polarOutput(filtered, filtered_phaseShift, wavelengths, time)
+    else:
+        cartesianOutput(filtered, filtered_phaseShift, wavelengths, time)
 
 if __name__ == "__main__":
     main()
